@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'login_or_register_page.dart';
+import 'package:gamerpg/login/login_page.dart';
+import 'dart:async'; // Import Timer
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -11,29 +12,36 @@ class SplashScreen extends StatefulWidget {
 class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _animation;
+  double _progressValue = 0.0; // Variabel untuk nilai progress
 
   @override
   void initState() {
     super.initState();
 
-    // Inisialisasi Animation Controller
+    // Inisialisasi Animation Controller dengan durasi yang lebih pendek
     _controller = AnimationController(
-      duration: const Duration(seconds: 2), // Durasi animasi
+      duration: const Duration(seconds: 1), // Ubah durasi menjadi 1 detik
       vsync: this,
     );
 
     // Membuat Animation
     _animation = Tween<double>(begin: 0.0, end: 1.0).animate(_controller);
 
-    // Memulai animasi
+    // Memulai animasi dan progress bar
     _controller.forward();
 
-    // Navigasi setelah delay
-    Future.delayed(const Duration(seconds: 4), () {
-      if (mounted) {
+    // Timer untuk memperbarui nilai progress setiap detik
+    Timer.periodic(const Duration(milliseconds: 100), (timer) {
+      if (_progressValue >= 1.0) {
+        timer.cancel();
+        // Navigasi setelah delay
         Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (context) => const LoginOrRegisterScreen()), // Ganti dengan halaman tujuan Anda
+          MaterialPageRoute(builder: (context) => LoginPage()), // Ganti dengan halaman tujuan Anda
         );
+      } else {
+        setState(() {
+          _progressValue += 0.020; // Mengatur kecepatan progres
+        });
       }
     });
   }
@@ -47,18 +55,38 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: FadeTransition(
-        opacity: _animation,
-        child: Container(
-          width: double.infinity,
-          height: double.infinity,
-          decoration: const BoxDecoration(
-            image: DecorationImage(
-              image: AssetImage('assets/image/otp and payment/start.png'), // Ganti dengan path gambar Anda
-              fit: BoxFit.cover, // Agar gambar memenuhi seluruh latar belakang
+      body: Stack(
+        children: [
+          // Background image with fade animation
+          FadeTransition(
+            opacity: _animation,
+            child: Container(
+              width: double.infinity,
+              height: double.infinity,
+              decoration: const BoxDecoration(
+                image: DecorationImage(
+                  image: AssetImage('assets/logo/loading_screen.jpg'), // Ganti dengan path gambar Anda
+                  fit: BoxFit.cover,
+                ),
+              ),
             ),
           ),
-        ),
+          // Progress indicator at the bottom
+          Align(
+            alignment: Alignment.bottomCenter,
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: 20.0), // Bisa diubah sesuai kebutuhan
+              child: SizedBox(
+                width: MediaQuery.of(context).size.width * 0.8, // Sesuaikan lebar sesuai keinginan
+                child: LinearProgressIndicator(
+                  value: _progressValue, // Menggunakan nilai progress yang diperbarui
+                  backgroundColor: const Color.fromARGB(255, 255, 255, 255).withOpacity(0.3),
+                  color: const Color.fromARGB(255, 255, 163, 43),
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
